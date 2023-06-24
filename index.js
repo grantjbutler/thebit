@@ -3,6 +3,7 @@ const obs = new OBSWebSocket();
 const io = require("socket.io-client");
 
 const socket = io("http://localhost:8080");
+
 // Declare some events to listen for.
 obs.on("ConnectionOpened", () => {
   console.log("Connection Opened");
@@ -11,21 +12,42 @@ obs.on("ConnectionOpened", () => {
 obs.on("Identified", () => {
   console.log("Identified, good to go!");
 
-  obs.call("GetHotkeyList").then(
-    (data) => {
-      console.log(data);
-    },
-  );
+  // obs.call("GetSourceFilterList", { sourceName: "Test" }).then(
+  //   (data) => {
+  //     if (data?.filters) {
+  //       for (filter of data?.filters) {
+  //         // console.log("filter settings data", filter?.filterSettings);
+  //       }
+  //     }
 
-  obs.call("GetSourceFilterList", { sourceName: "Test" }).then(
-    (data) => {
-      if (data?.filters) {
-        for (filter of data?.filters) {
-          console.log(filter?.filterSettings);
-        }
-      }
-    },
-  );
+  //   },
+  // );
+
+  let startX = 0;
+  let startY = 0;
+  let startWidth = 0;
+  let startHeight = 0;
+  let currentWidth = 1920;
+  let currentHeight = 1080;
+
+  obs.call("GetSceneItemId", {
+    sceneName: "Test",
+    sourceName: "Color Source",
+  }).then((data) => {
+    obs.call("GetSceneItemTransform", {
+      sceneName: "Test",
+      sceneItemId: data.sceneItemId,
+    }).then((data) => {
+      // console.log(data)
+      startX = data.sceneItemTransform.positionX;
+      startY = data.sceneItemTransform.positionY;
+
+      startWidth = data.sceneItemTransform.sourceWidth;
+      startHeight = data.sceneItemTransform.sourceHeight;
+      currentWidth = startWidth;
+      currentHeight = startHeight;
+    })
+  });
 
   let activityDelta = 1.00;
   let currentSize = 1;
@@ -42,18 +64,8 @@ obs.on("Identified", () => {
     } else if (number > 10) {
       return 10;
     }
+    return number;
   };
-
-  // We need to get startX and startY from the OBS Websocket API
-  const startX = 100;
-  const startY = 100;
-
-  // We need to get the startWidth and startHeight from the OBS Websocket API
-  const startWidth = 1920;
-  const startHeight = 1080;
-
-  let currentWidth = 1920;
-  let currentHeight = 1080;
 
   socket.on("donation:save", (data) => {
     const { amount: donationCents } = data;
@@ -62,7 +74,7 @@ obs.on("Identified", () => {
     const baseDelta = donationCents / 99900;
     const newSize = currentSize + (baseDelta * activityDelta * adjustSign);
 
-    currentSize = newSize < 0.1 ? 0 : newSize;
+    currentSize = clamp(newSize);
     currentWidth = startWidth * currentSize;
     currentHeight = startHeight * currentSize;
     activityDelta *= 0.95;
@@ -89,15 +101,9 @@ obs.on("Identified", () => {
       },
     });
 
-    //
-
     obs.call("TriggerHotkeyByName", {
       hotkeyName: "MinishResize",
-    }).then(
-      (data) => {
-        console.log("success");
-      },
-    ).catch((e) => console.log(e));
+    }).then().catch((e) => console.log(e));
 
     // update the transition to increase or decrease based on amount
     // I'm thinking we could probably load up some kind of config file
@@ -122,7 +128,7 @@ obs.on("SwitchScenes", (data) => {
   console.log("SwitchScenes", data);
 });
 
-obs.connect("ws://192.168.1.147:4455", "FiFAhPnPyOT12siC").then((info) => {
+obs.connect("ws://172.17.128.1:4455", "Bo8Ho959mwoFDVEF").then((info) => {
   console.log("Connected and identified", info);
 }, () => {
   console.error("Error Connecting");
