@@ -1,5 +1,6 @@
 {
   "name": "minish-resizer",
+  "type": "module",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -11,7 +12,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.4.0",
     "dotenv": "^16.3.1",
+    "express": "^4.18.2",
     "obs-websocket-js": "^5.0.3",
     "socket.io-client": "^4.6.2"
   },

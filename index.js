@@ -1,142 +1,168 @@
-const { default: OBSWebSocket } = require("obs-websocket-js");
-const obs = new OBSWebSocket();
-const io = require("socket.io-client");
-require("dotenv").config();
+// import OBSWebSocket from "obs-websocket-js";
+import "dotenv/config";
+import obs_ws from "./obs.js";
+import socket_io from "./socketio.js";
+import express from "express";
+import http from "http";
 
-const socket = io("http://localhost:8080");
+const socket = await socket_io();
+const obs = await obs_ws();
 
-// Declare some events to listen for.
-obs.on("ConnectionOpened", () => {
-  console.log("Connection Opened");
+const app = express();
+const port = process.env.PORT || 8675;
+const server = http.createServer(app);
+
+const sceneItemId = await obs.call("GetSceneItemId", {
+  sceneName: process.env.SCENE_NAME,
+  sourceName: process.env.SOURCE_NAME,
+}).then((resp) => {
+  return resp.sceneItemId;
 });
 
-obs.on("Identified", () => {
-  console.log("Identified, good to go!");
+let active = true;
+let startX = 0;
+let startY = 0;
+let startWidth = 1920;
+let startHeight = 1080;
+let currentWidth = 1920;
+let currentHeight = 1080;
+let currentScale = 1.0;
+let activityDelta = 1.00;
 
-  // obs.call("GetSourceFilterList", { sourceName: "Test" }).then(
-  //   (data) => {
-  //     if (data?.filters) {
-  //       for (filter of data?.filters) {
-  //         // console.log("filter settings data", filter?.filterSettings);
-  //       }
-  //     }
-
-  //   },
-  // );
-
-  // if it crashes and you restart it the below values
-  // will be wrong. We probalby need to set them to hard
-  // values given to us from the OBS crew.
-  let startX = 0;
-  let startY = 0;
-  let startWidth = 0;
-  let startHeight = 0;
-  let currentWidth = 1920;
-  let currentHeight = 1080;
-
-  obs.call("GetSceneItemId", {
+/* Some very simple GET requests we can make
+ * to the server for controlling the resizer.
+ */
+app.get("/", (req, res) => {
+  obs.call("GetSceneItemTransform", {
     sceneName: process.env.SCENE_NAME,
-    sourceName: process.env.SOURCE_NAME,
-  }).then((data) => {
-    obs.call("GetSceneItemTransform", {
-      sceneName: process.env.SCENE_NAME,
-      sceneItemId: data.sceneItemId,
-    }).then((data) => {
-      // console.log(data);
-      startX = data.sceneItemTransform.positionX;
-      startY = data.sceneItemTransform.positionY;
-
-      startWidth = data.sceneItemTransform.sourceWidth;
-      startHeight = data.sceneItemTransform.sourceHeight;
-      currentWidth = startWidth;
-      currentHeight = startHeight;
-    });
-  });
-
-  let activityDelta = 1.00;
-  let currentSize = 1;
-
-  setInterval(() => {
-    if (activityDelta < 1) {
-      activityDelta += 0.01;
-    }
-  }, 1000);
-
-  const clamp = (number) => {
-    if (number < 0.1) {
-      return 0.1;
-    } else if (number > 10) {
-      return 10;
-    }
-    return number;
-  };
-
-  socket.on("donation:save", (data) => {
-    const { amount: donationCents } = data;
-
-    const adjustSign = (donationCents % 2) ? 1 : -1;
-    const baseDelta = donationCents / 99900;
-    const newSize = currentSize + (baseDelta * activityDelta * adjustSign);
-
-    currentSize = clamp(newSize);
-    currentWidth = startWidth * currentSize;
-    currentHeight = startHeight * currentSize;
-    activityDelta *= 0.95;
-
-    const posX = startX + ((startWidth - currentWidth) / 2);
-    const posY = startY + ((startHeight - currentHeight) / 2);
-
-    console.log({
-      currentSize: currentSize,
-      activityDelta: activityDelta,
-      baseDelta: baseDelta,
-      adjustSign: adjustSign,
-      baseDelta: baseDelta,
-      donationCents: donationCents,
-      newSize: newSize,
-    });
-
-    obs.call("SetSourceFilterSettings", {
-      sourceName: process.env.SCENE_NAME,
-      filterName: process.env.FILTER_NAME,
-      filterSettings: {
-        pos: { x: posX, y: posY },
-        scale: { x: currentSize, y: currentSize },
-      },
-    });
-
-    obs.call("TriggerHotkeyByName", {
-      hotkeyName: process.env.HOTKEY_NAME,
-    }).then().catch((e) => console.log(e));
-
-    // update the transition to increase or decrease based on amount
-    // I'm thinking we could probably load up some kind of config file
-    // via json that could have special amounts that do wacky things.
-    // E.g.
-    // {
-    //    1111: {"scale": 0.25, "transition": 'instant'},
-    //    6969: {"scale": 0.69, "transition": 'smooth'}
-    //
-    // }
-    //
-    // We can then maybe even have 2 different methods we call where we
-    // either update the scale of the scene/source immediately or we update
-    // the filter and then trigger that for a smoother transition.
-    //
-    //
-    //
+    sceneItemId: sceneItemId,
+  }).then((response) => {
+    return res.json(response);
   });
 });
 
-obs.on("SwitchScenes", (data) => {
-  console.log("SwitchScenes", data);
+app.get("/reset", (req, res) => {
+  obs.call("SetSceneItemTransform", {
+    sceneName: process.env.SCENE_NAME,
+    sceneItemId: sceneItemId,
+    sceneItemTransform: {
+      positionX: 0,
+      positionY: 0,
+      scaleX: 1,
+      scaleY: 1,
+    },
+  }).then(() => {
+    return res.json({ message: "Success" });
+  });
 });
 
-obs.connect(
-  `ws://${process.env.OBS_WEBSOCKET_ADDRESS}`,
-  process.env.OBS_WEBSOCKET_PASSWORD,
-).then((info) => {
-  console.log("Connected and identified", info);
-}, () => {
-  console.error("Error Connecting");
+app.get("/stop", (req, res) => {
+  active = false;
+  obs.call("SetSceneItemTransform", {
+    sceneName: process.env.SCENE_NAME,
+    sceneItemId: sceneItemId,
+    sceneItemTransform: {
+      positionX: 0,
+      positionY: 0,
+      scaleX: 1,
+      scaleY: 1,
+    },
+  }).then(() => {
+    return res.json({ message: "Success" });
+  });
+});
+
+// To be clear, when paused we are not keeping any information about
+// missed donations. If we don't process them when they come in they
+// just don't get processed, period.
+app.get("/pause", (req, res) => {
+  active = false;
+  return res.json({ message: "Paused" });
+});
+
+app.get("/resume", (req, res) => {
+  active = true;
+  return res.json({ message: "Resumed" });
+});
+
+app.get("/activityreset", (req, res) => {
+  activityDelta = 1.00;
+  return res.json({ message: "Activity Delta set to 1.00" });
+});
+
+obs.call("GetSceneItemTransform", {
+  sceneName: process.env.SCENE_NAME,
+  sceneItemId: sceneItemId,
+}).then((data) => {
+  console.log("Current Transform", data.sceneItemTransform);
+  currentWidth = data.sceneItemTransform.sourceWidth;
+  currentHeight = data.sceneItemTransform.sourceHeight;
+});
+
+setInterval(() => {
+  if (activityDelta < 1) {
+    activityDelta += 0.01;
+  }
+}, 1000);
+
+const clamp = (number) => {
+  if (number < 0.1) {
+    return 0.1;
+  } else if (number > 10) {
+    return 10;
+  }
+  return number;
+};
+
+socket.on("donation:show", (data) => {
+  if (!active) {
+    console.log("Donation received but I'm paused!");
+    return false;
+  }
+
+  // While we don't currently do it, there's nothing that
+  // would stop us from implementing a simple method to
+  // do a lookup of donation amounts and certain amounts
+  // could have certain affects on the scene.
+
+  const { amount } = data;
+  const donationCents = parseInt(amount * 100);
+  const adjustSign = (donationCents % 2) ? 1 : -1;
+  const baseDelta = donationCents / 99900;
+  const newSize = currentScale + (baseDelta * activityDelta * adjustSign);
+
+  currentScale = clamp(newSize);
+  currentWidth = startWidth * currentScale;
+  currentHeight = startHeight * currentScale;
+  activityDelta *= 0.95;
+
+  const posX = startX + ((startWidth - currentWidth) / 2);
+  const posY = startY + ((startHeight - currentHeight) / 2);
+
+  console.log({
+    currentScale: currentScale,
+    activityDelta: activityDelta,
+    baseDelta: baseDelta,
+    adjustSign: adjustSign,
+    baseDelta: baseDelta,
+    donationCents: donationCents,
+    newSize: newSize,
+  });
+
+  obs.call("SetSourceFilterSettings", {
+    sourceName: process.env.SCENE_NAME,
+    filterName: process.env.FILTER_NAME,
+    filterSettings: {
+      pos: { x: posX, y: posY },
+      scale: { x: currentScale, y: currentScale },
+    },
+  });
+
+  obs.call("TriggerHotkeyByName", {
+    hotkeyName: process.env.HOTKEY_NAME,
+  }).then().catch((e) => console.log(e));
+});
+
+server.listen(port, function () {
+  console.log(`Express Listening on port ${port}`);
 });
