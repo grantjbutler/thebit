@@ -83,7 +83,7 @@ app.get("/pause", (req, res) => {
   return res.json({ message: "Paused" });
 });
 
-app.get("/resume", (req, res) => {
+app.get("/start", (req, res) => {
   active = true;
   return res.json({ message: "Resumed" });
 });
@@ -92,6 +92,7 @@ app.get("/activityreset", (req, res) => {
   activityDelta = 1.00;
   return res.json({ message: "Activity Delta set to 1.00" });
 });
+
 
 app.get("/donate", (req, res) => {
   const { amount } = req.query;
@@ -114,9 +115,25 @@ app.get("/addTransform", (req, res) => {
       message: 'Failed to add transform',
       transforms: obsTransformer.tlookup
     })
-
   }
 });
+
+app.get("/removeTransform", (req, res) => {
+  const amount = req.query.amount;
+
+  try{
+    obsTransformer.removeLookupScale(amount);
+    return res.json({
+      message: 'Removed Transform',
+      transforms: obsTransformer.tlookup
+    })
+  } catch {
+    return res.json({
+      message: 'Failed to Remove Transform',
+      transforms: obsTransformer.tlookup
+    })
+  }
+})
 
 obs.call("GetSceneItemTransform", {
   sceneName: process.env.SCENE_NAME,
@@ -151,13 +168,27 @@ const triggerHotkey = () => {
   }).then().catch((e) => console.log(e));
 }
 
-socket.on("donation:show", (data) => {
+let SHOWN_DONATIONS = []
+
+socket.on("donation:show", ({amount, donationid}) => {
   if (!active) {
     console.log("Donation received but I'm paused!");
     return false;
   }
 
-  const { amount } = data;
+  // Skip a donation if we already processed it
+  if(SHOWN_DONATIONS.includes(donationid)){
+    console.log("I already processed that donation", donationid)
+    return false;
+  }
+
+  SHOWN_DONATIONS.push(donationid);
+
+  // Get rid of the oldest donation in our array.
+  if(SHOWN_DONATIONS.length > 5){
+    SHOWN_DONATIONS.shift()
+  }
+
   const transform = obsTransformer.transform(amount);
 
   setSourceFilterSettings(transform);

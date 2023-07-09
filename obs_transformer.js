@@ -36,6 +36,10 @@ export default class ObsTransformer {
     this.tlookup[`${amount}`] = scale
   }
 
+  removeLookupScale(key) {
+    delete this.tlookup[key];
+  }
+
   lookupScale(amount) {
     const key = amount?.toString();
 
