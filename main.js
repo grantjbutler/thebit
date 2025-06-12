@@ -2,6 +2,7 @@ import Obs from "./obs.js"
 import ObsTransformer from "./obs_transformer.js";
 import WebSocket from "ws";
 import { parseMessage } from "./events.js";
+import { sleep } from "./helpers.js";
 
 export default async () => {
   const ws = new WebSocket(process.env.WS_ADDRESS);
@@ -182,6 +183,7 @@ export default async () => {
           });
           obs.triggerHotkey();
         } else if (data in modifiers) {
+          await sleep(10000)
           modifiers[data]();
         }
         break;
@@ -193,7 +195,6 @@ export default async () => {
           settings: obsTransformer.getTransform()
         })
         obs.triggerHotkey();
-        //
         break;
     }
   });
