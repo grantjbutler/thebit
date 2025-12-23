@@ -1,5 +1,11 @@
 import { ObsCommand, SceneItem } from "./scene_item.js"
 
+interface Action {
+  action: string,
+  props?: any;
+  options?: any;
+}
+
 interface Item {
   name: string,
   enabled: boolean,
@@ -14,10 +20,24 @@ class Scene {
   sources: Map<string, Item> = new Map();
   commands: ObsCommand[] = [];
   uuid: string;
+  actions: Map<string, Function> = new Map();
 
   constructor(props: { name: string, uuid: string }) {
     this.name = props.name;
     this.uuid = props.uuid;
+  }
+
+  loadState(state: any) {
+    this.sceneItem.loadState(state.sceneItem)
+  }
+
+  usableActions(): string[] {
+    return [
+      "reset",
+      "scale",
+      "source",
+      "filter"
+    ]
   }
 
   setSceneItem(sceneItem: SceneItem): SceneItem {
@@ -34,32 +54,16 @@ class Scene {
     this.sources.set(props.name, props);
   }
 
-  getSource(sourceName: string): Promise<Item> {
-    const source = this.sources.get(sourceName);
-
-    return new Promise((resolve, reject) => {
-      if (source) {
-        resolve(source);
-      } else {
-        reject(new Error(`No source found with name ${sourceName}`));
-      }
-    })
+  getSource(sourceName: string): Item | null {
+    return this.sources.get(sourceName) || null;
   }
 
   addFilter(props: Item): void {
     this.filters.set(props.name, props)
   }
 
-  getFilter(filterName: string): Promise<Item> {
-    const filter = this.filters.get(filterName);
-
-    return new Promise((resolve, reject) => {
-      if (filter) {
-        resolve(filter);
-      } else {
-        reject(new Error(`No filter found with name ${filterName}`));
-      }
-    })
+  getFilter(filterName: string): Item | null {
+    return this.filters.get(filterName) || null;
   }
 
   getCommands(): Array<ObsCommand> {
@@ -96,23 +100,25 @@ class Scene {
     })
   }
 
-  source(sourceName: string): void {
-    this.getSource(sourceName).then((source) => {
+  toggleSource({ sourceName }: { sourceName: string }): void {
+    const source = this.getSource(sourceName);
+    if (source) {
       source.enabled = !source.enabled;
 
       this.commands.push({
         command: "SetSceneItemEnabled",
         props: {
-          sceneName: source.name,
+          sceneName: this.name,
           sceneItemId: source.id,
           sceneItemEnabled: source.enabled
         }
       })
-    });
+    }
   }
 
-  filter(filterName: string): void {
-    this.getFilter(filterName).then((filter) => {
+  toggleFilter({ filterName }: { filterName: string }): void {
+    const filter = this.getFilter(filterName)
+    if (filter) {
       filter.enabled = !filter.enabled
 
       this.commands.push({
@@ -123,14 +129,33 @@ class Scene {
           filterEnabled: filter.enabled
         }
       })
-    })
+    }
+  }
+
+  scale({ scale }: { scale: number }): void {
+    this.sceneItem.scale(+scale)
+  }
+
+  getProtocol(): Action[] {
+    return [
+      { action: "scale", props: { scale: "number" } },
+      { action: "scale", options: { scale: [0.2, 0.5, 1, 2.5] } },
+      {
+        action: "toggleSource",
+        options: {
+          sourceName: [...this.sources.values()]
+        }
+      },
+      {
+        action: "toggleFilter",
+        options: {
+          filterName: [...this.filters.values()]
+        }
+      },
+      { action: "reset", props: {} },
+      { action: "shrink", props: {} },
+    ]
   }
 }
 
 export { Scene }
-
-
-
-
-
-

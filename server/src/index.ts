@@ -4,7 +4,6 @@ import ObsController from "./controllers/obs_controller.js"
 import dotenv from "dotenv";
 
 dotenv.config({ path: path.join(import.meta.dirname, "..", "..", ".env") });
-import Client from "./client.js"
 import config from "./config.js"
 
 const app = express();
@@ -21,9 +20,25 @@ if (config.controller("OBS")) {
   );
 
   obs.connect();
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
-  app.get("/obs", (req: Request, res: Response) => {
+  app.get("/api/obs", (req: Request, res: Response) => {
     res.json(config.controller("OBS"));
+  })
+
+  app.get("/api/obs/actions", (req: Request, res: Response) => {
+    const protocol = obs.getProtocol();
+    const object = Object.fromEntries(protocol);
+
+    res.json(object);
+  })
+
+  app.post("/api/obs/action", (req: Request, res: Response) => {
+    const { action, sceneName, ...args } = req.body;
+    console.log('req', action, sceneName, args);
+    obs.action(action, sceneName, args)
+    res.sendStatus(200);
   })
 
   app.get("/test", async (req: Request, res: Response) => {
@@ -36,19 +51,10 @@ if (config.controller("OBS")) {
 
 app.use(express.static(path.join(import.meta.dirname, '..', 'client')));
 
+app.get('/*', (req, res) => {
+  res.sendFile(path.join(import.meta.dirname, '..', 'client', 'index.html'));
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
-// const runMain = async () => {
-//   try {
-//     await main()
-//   } catch (error) {
-//     console.log('Errored out, restarting.')
-//     console.error(error)
-//     await runMain()
-//   }
-// }
-//
-// await runMain()
-//
-// await main()

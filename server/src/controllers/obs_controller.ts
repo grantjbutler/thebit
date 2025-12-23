@@ -2,6 +2,14 @@ import { Controller } from "./controller.js"
 import { Scene, SceneItem } from "../obs/index.js"
 import ObsWebSocket from "obs-websocket-js";
 import cfg from "../config.js";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+
+interface Action {
+  action: string,
+  props?: any,
+  options?: any
+}
+
 // import config from "../config.json" assert {type: "json"};
 
 // A controller in this case is equivalent to a scene in OBS identified by an ID.
@@ -40,13 +48,37 @@ export default class ObsController extends Controller {
   password: string | undefined;
   config: any = cfg.controller("OBS")
 
-
   constructor(url: string, password?: string) {
     super()
 
     this.url = url;
     this.password = password;
     this.obs = new ObsWebSocket();
+  }
+
+  dumpState(): void {
+    const state = Object.fromEntries(this.scenes);
+
+    writeFileSync("../obs_controller.state.json", JSON.stringify(state, null, 2));
+  }
+
+  loadState(): void {
+    if (!existsSync("../obs_controller.state.json"))
+      return
+
+    try {
+      const data = readFileSync("../obs_controller.state.json", "utf-8");
+      const state = JSON.parse(data.toString())
+
+      for (const [sceneName, sceneState] of Object.entries(state)) {
+        const scene = this.getScene(sceneName);
+        if (scene) {
+          scene.loadState(sceneState);
+        }
+      }
+    } catch (err: any) {
+      console.error("Failed to parse state file", err)
+    }
   }
 
   async connect(): Promise<any> {
@@ -125,6 +157,7 @@ export default class ObsController extends Controller {
             const transform = oSceneItem.sceneItemTransform
             scene.setSceneItem(new SceneItem({
               name: oSceneItem.sourceName,
+              id: oSceneItem.sceneItemId,
               scene: scene,
               active: true,
               transformFilterName: cScene.moveTransitionFilterName,
@@ -156,6 +189,9 @@ export default class ObsController extends Controller {
         }
         console.debug('scene', scene);
       }
+
+      this.loadState();
+      this.dumpState();
     })
   }
 
@@ -194,6 +230,31 @@ export default class ObsController extends Controller {
     }).then((response: any) => response.filters)
   }
 
+  getProtocol(): Map<string, Action[]> {
+    const protocol = new Map<string, Action[]>(
+      this.scenes.values().map((scene: Scene) => [scene.name, scene.getProtocol()])
+    )
+
+    return protocol;
+  }
+
+  action(action: string, sceneName: string, props: any): void {
+    const scene = this.getScene(sceneName);
+
+    if (!scene)
+      return
+
+    console.log('action', action, sceneName, props)
+
+    const actionFunc: any = (scene as any)[action];
+
+    if (typeof actionFunc === "function") {
+      console.log(`responds to ${action}`, props)
+      actionFunc.apply(scene, [props]);
+      this.send(scene.name);
+    }
+  }
+
   async send(sceneName: string) {
     const scene = this.scenes.get(sceneName);
 
@@ -211,7 +272,7 @@ export default class ObsController extends Controller {
       })
     }
 
-    console.log('requests', requests);
+    console.log('requests', JSON.stringify(requests, null, 2));
     if (requests.length > 0) {
       await this.obs.callBatch(requests);
     }

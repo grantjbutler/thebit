@@ -2,6 +2,7 @@ import { Scene } from "./scene.js";
 
 type SceneItemProps = {
   name: string;
+  id: number,
   scene: Scene;
   active: boolean;
   rotation: number;
@@ -34,6 +35,7 @@ interface ObsCommand {
 
 class SceneItem {
   name!: string;
+  id!: number;
   private scene!: Scene;
   private active: boolean = true;
   private rotation!: number;
@@ -55,6 +57,14 @@ class SceneItem {
     this.currentSize = this.defaultSize;
     this.currentPosition = this.defaultPosition;
     this.alignment = this.defaultAlignment;
+  }
+
+  loadState({ defaultSize, defaultPosition, defaultScale, defaultAlignment }: SceneItemProps): void {
+    this.currentSize = this.defaultSize = defaultSize
+    this.currentPosition = this.defaultPosition = defaultPosition
+    this.currentScale = this.defaultScale = defaultScale
+    this.alignment = this.defaultAlignment = defaultAlignment
+    console.log(this.toJSON())
   }
 
   // Destructive action that returns the list of commands
@@ -105,13 +115,17 @@ class SceneItem {
     this.alignment = this.defaultAlignment
 
     this.setSceneItemTransform({
-      alignment: this.alignment,
-      height: this.defaultHeight(),
-      width: this.defaultWidth(),
-      positionX: this.defaultX(),
-      positionY: this.defaultY(),
-      scaleX: this.defaultScaleX(),
-      scaleY: this.defaultScaleY()
+      sceneItemId: this.id,
+      sceneName: this.scene.name,
+      sceneItemTransform: {
+        alignment: this.alignment,
+        height: this.defaultHeight(),
+        width: this.defaultWidth(),
+        positionX: this.defaultX(),
+        positionY: this.defaultY(),
+        scaleX: this.defaultScaleX(),
+        scaleY: this.defaultScaleY()
+      }
     })
   }
 
