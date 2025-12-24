@@ -11,7 +11,7 @@
     controller: "obs" | "atem";
   }>();
 
-  let fullPath = path;
+  let fullPath = Array.from(path);
   if (pathComponent) {
     path.push(pathComponent);
   }
