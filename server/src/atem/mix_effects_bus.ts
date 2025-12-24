@@ -1,5 +1,5 @@
-import { UpstreamKey } from "./upsteam_key";
-import { Actions } from '../action';
+import { UpstreamKey } from "./upsteam_key.js";
+import { Actions } from '../action.js';
 
 class MixEffectsBus {
   upstreamKeys: UpstreamKey[] = [];
