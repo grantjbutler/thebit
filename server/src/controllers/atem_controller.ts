@@ -22,7 +22,7 @@ export default class ATEMController extends Controller {
       }
     });
     this.atem.on('stateChanged', (state) => {
-      console.log('ATEM state changed: ', state);
+      console.log('ATEM state changed');
       
       this._loadAtemState(state);
     });
