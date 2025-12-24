@@ -14,8 +14,8 @@ class UpstreamKey {
 
   scale({ scale }: { scale: number }): void {
     this.atem.setUpstreamKeyerDVESettings({
-      sizeX: scale,
-      sizeY: scale
+      sizeX: scale * 1000,
+      sizeY: scale * 1000
     }, this.meIndex, this.keyerIndex)
   }
 
