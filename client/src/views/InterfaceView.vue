@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { ref, onMounted } from "vue";
   import type { Actions } from '../action.js';
+  import ActionsView from "@/components/ActionsView.vue";
 
   interface Action {
     action: string;
@@ -30,13 +31,8 @@
 
 <template>
   <main>
-  <div> ATEM</div>
     <div v-if="isLoading === false">
-      <div v-for="(value, key) in data">
-        <div>
-          <p>{{ key }}</p>
-        </div>
-      </div>
+      <ActionsView :name="'ATEM Actions'" :actions="data" />
     </div>
   </main>
 </template>

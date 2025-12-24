@@ -10,4 +10,6 @@ export interface OptionsAction {
 
 export type Action = PropAction | OptionsAction;
 
-export type Actions = {[key: string]: Actions} | Action[];
+export type ActionList = Action[];
+export type ActionMapping = {[key: string]: Actions};
+export type Actions = ActionMapping | ActionList;
