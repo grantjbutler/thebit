@@ -12,7 +12,6 @@ export default class ATEMController extends Controller {
     this.atem = new Atem();
     this.atem.on('info', console.log);
     this.atem.on('error', console.error);
-    this.atem.on('receivedCommands', console.log);
     this.atem.on('connected', () => {
       console.log('ATEM connected');
     });
