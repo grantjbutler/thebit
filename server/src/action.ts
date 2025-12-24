@@ -1,11 +1,11 @@
 export interface PropAction {
   action: string;
-  props: any;
+  props: {[key: string]: any};
 };
 
 export interface OptionsAction {
   action: string;
-  options: any;
+  options: {[key: string]: any[]};
 }
 
 export type Action = PropAction | OptionsAction;

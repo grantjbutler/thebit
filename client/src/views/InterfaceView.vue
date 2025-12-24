@@ -3,17 +3,17 @@
   import type { Actions } from '../action.js';
   import ActionsView from "@/components/ActionsView.vue";
 
-  interface Action {
-    action: string;
-    props: Array<string>;
-  }
+  const props = defineProps<{
+    title: string;
+    controller: "obs" | "atem";
+  }>();
 
   const data = ref<Actions>({});
   const isLoading = ref(true);
 
   const fetchProtocol = async() => {
     try {
-      const response = await fetch("/api/atem/actions")
+      const response = await fetch(`/api/${props.controller}/actions`)
       data.value = await response.json();
 
     } catch(error) {
@@ -26,13 +26,12 @@
   onMounted(() => {
     fetchProtocol();
   })
-  //const actions = await response.json();
 </script>
 
 <template>
   <main>
     <div v-if="isLoading === false">
-      <ActionsView :name="'ATEM Actions'" :actions="data" />
+      <ActionsView :name="props.title" :actions="data" />
     </div>
   </main>
 </template>
