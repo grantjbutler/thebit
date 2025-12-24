@@ -13,7 +13,7 @@
 
   let fullPath = Array.from(path);
   if (pathComponent) {
-    path.push(pathComponent);
+    fullPath.push(pathComponent);
   }
 </script>
 <template>
