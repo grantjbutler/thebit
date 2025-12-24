@@ -17,14 +17,13 @@ export default class ATEMController extends Controller {
       console.log('ATEM connected');
     });
     this.atem.on('stateChanged', (state) => {
-      let mixEffectsBuses = [];
+      console.log('ATEM state changed: ', state);
       
-      for (let mixEffectsBus of state.info.mixEffects) {
-        if (!mixEffectsBus) continue;
-        mixEffectsBuses.push(new MixEffectsBus(mixEffectsBus.keyCount));
-      }
-
-      this.mixEffectsBuses = mixEffectsBuses;
+      this.mixEffectsBuses = state.info.mixEffects.map((mixEffectsBus, index) => {
+        if (!mixEffectsBus) return null;
+        return new MixEffectsBus(mixEffectsBus.keyCount);
+      })
+      .filter((bus) => bus !== null) as MixEffectsBus[];
     });
   }
 
