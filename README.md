@@ -36,7 +36,7 @@ For example
 rules: [
     {
         on: "donation:show",
-        function: (args) => {
+        function: (event) => {
             return {
                 action: "shrink",
                 path: "player1",

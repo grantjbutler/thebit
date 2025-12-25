@@ -4,7 +4,7 @@ import ObsController from "./controllers/obs_controller.js"
 import dotenv from "dotenv";
 import { Listeners, SocketIOListener } from "./listeners/index.js"
 
-dotenv.config({ path: path.join(import.meta.dirname, "..", "..", ".env") });
+dotenv.config({ path: path.join(process.cwd(), ".env") });
 import config from "./config.js"
 import ATEMController from "./controllers/atem_controller.js";
 

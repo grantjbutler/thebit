@@ -26,9 +26,7 @@ interface ConfigData {
 
 let jsConfig: ConfigData;
 
-const configPath = path.join(
-  import.meta.dirname, "..", "..", "thebit.config.js"
-)
+const configPath = path.join(process.cwd(), "thebit.config.js")
 
 const mod = await import(configPath)
 jsConfig = mod.default;

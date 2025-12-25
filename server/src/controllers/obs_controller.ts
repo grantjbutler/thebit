@@ -26,15 +26,15 @@ export default class ObsController extends Controller {
   dumpState(): void {
     const state = Object.fromEntries(this.scenes);
 
-    writeFile("../obs_controller.state.json", JSON.stringify(state, null, 2));
+    writeFile("obs_controller.state.json", JSON.stringify(state, null, 2));
   }
 
   loadState(): void {
-    if (!existsSync("../obs_controller.state.json"))
+    if (!existsSync("obs_controller.state.json"))
       return
 
     try {
-      const data = readFileSync("../obs_controller.state.json", "utf-8");
+      const data = readFileSync("obs_controller.state.json", "utf-8");
       const state = JSON.parse(data.toString())
       for (const [sceneName, sceneState] of Object.entries(state)) {
         const scene = this.getScene(sceneName);
