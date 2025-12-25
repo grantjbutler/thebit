@@ -29,15 +29,19 @@ export default {
       rules: [
         {
           on: "donation:show",
-          function: ((args) => {
-            console.log("Donation received:", args);
+          function: ((event) => {
+            const uid = event.donationid || event.data?.donationid
+            const amount = parseFloat(event.amount || event.data?.amount)
+            let magnitude = amount / 100
 
-            return {
-              uid: args?.donationid,
-              action: "shrink",
-              path: "TransformGame1",
-              magnitude: 0.02
+            if (magnitude > 1) {
+              magnitude = 1
             }
+
+            if (parseInt(amount * 100) % 2 == 0)
+              return { uid: uid, action: "shrink", magnitude }
+            else
+              return { uid: uid, action: "grow", magnitude }
           })
         }
       ]

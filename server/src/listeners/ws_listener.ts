@@ -20,7 +20,6 @@ class WSListener extends Listener {
     this.rules.forEach((rule) => {
       this.socket.on(rule.on, (args: any) => {
         const listenerAction: ListenerAction = this.execRule(rule, args);
-        console.debug('listenerAction', listenerAction)
 
         if (this.checkHistory(listenerAction.uid)) {
           console.debug(`Duplicate event received for uid ${listenerAction.uid}, ignoring.`)
