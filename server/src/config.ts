@@ -33,7 +33,9 @@ const configPath = path.join(
 const mod = await import(configPath)
 jsConfig = mod.default;
 
-console.log('Unable to load thebit.config.js')
+if (!jsConfig) {
+  throw new Error('Unable to load thebit.config.js')
+}
 
 class Config {
   private configData: ConfigData;
