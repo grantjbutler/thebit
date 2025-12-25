@@ -40,6 +40,10 @@ class Config {
     return this.configData.controllers[name];
   }
 
+  get controllers() {
+    return Object.keys(this.configData.controllers);
+  }
+
   getData(): ConfigData {
     return this.configData;
   }

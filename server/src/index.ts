@@ -41,9 +41,9 @@ if (config.controller("OBS")) {
   })
 
   app.post("/api/obs/action", (req: Request, res: Response) => {
-    const { action, sceneName, ...args } = req.body;
-    console.log('req', action, sceneName, args);
-    obs.action(action, sceneName, args)
+    const { action, path, ...args } = req.body;
+    console.log('req', action, path, args);
+    obs.action(action, path, args)
     res.sendStatus(200);
   })
 
@@ -94,6 +94,10 @@ if (config.controller("ATEM")) {
     res.sendStatus(200);
   });
 }
+
+app.get("/api/controllers", (req: Request, res: Response) => {
+  res.json(config.controllers);
+})
 
 app.use(express.static(path.join(import.meta.dirname, '..', 'client')));
 
