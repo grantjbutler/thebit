@@ -20,15 +20,14 @@
 
   const titleize = (str: string) => {
     return str
-      .split("_") // Split the string into an array of words
-      .map(word => { // Capitalize the first letter of each word
-        // Handle potential extra underscores resulting in empty strings from the split
+      .split("_")
+      .map(word => {
         if (word.length > 0) {
           return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
         }
         return "";
       })
-      .join(" "); // Join the words back together with spaces
+      .join(" ");
   }
 
   const prettyPrintAction = (str: string) => titleize(decamelize(str))

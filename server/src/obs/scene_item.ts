@@ -118,31 +118,12 @@ class SceneItem {
 
   adjustSize(magnitude: number): void {
     const newScale = this.scaleX() * magnitude;
+    console.log('newScale', newScale)
     this.scale(newScale)
   }
 
   rotate(angle: number): void {
     this.rotation += angle;
-
-    console.log('newrotation', this.rotation, angle)
-
-    // const isSideways = (angle % 180) == 90
-    // const upsideDown = (angle % 360) >= 180
-
-    // this.scale(isSideways ? (9 / 16) : 1)
-
-    // if (isSideways) {
-    //   this.currentPosition = {
-    //     x: upsideDown ? (this.defaultWidth() / 2) - (this.height() / 2) : (this.defaultWidth() / 2) + (this.height() / 2),
-    //     y: 0
-    //   }
-    // } else {
-    //
-    //   this.currentPosition = {
-    //     x: upsideDown ? this.defaultWidth() : this.currentPosition["x"],
-    //     y: upsideDown ? this.defaultHeight() : this.currentPosition["y"]
-    //   }
-    // }
   }
 
   height(): number {

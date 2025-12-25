@@ -167,6 +167,11 @@ class Scene {
     this.transition();
   }
 
+  grow({ magnitude }: { magnitude: number }): void {
+    this.sceneItem.adjustSize(1 + (+magnitude))
+    this.transition();
+  }
+
   getActions(): Action[] {
     return [
       { action: "scale", props: { scale: "number" } },
@@ -185,6 +190,7 @@ class Scene {
       },
       { action: "reset", props: {} },
       { action: "shrink", props: { magnitude: "number" } },
+      { action: "grow", options: { magnitude: [0.25, 0.5, 0.75] } },
       { action: "rotate", props: { angle: "number" } },
       { action: "rotate", options: { angle: [30, 45, 90, 180] } },
       { action: "rotate", options: { angle: [-30, -45, -90, -180] } }
