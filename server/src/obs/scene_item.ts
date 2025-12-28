@@ -1,4 +1,5 @@
 import { Scene } from "./scene.js";
+import { clamp } from "../utils.js";
 
 type SceneItemProps = {
   name: string;
@@ -10,6 +11,8 @@ type SceneItemProps = {
   defaultPosition: { x: number, y: number };
   defaultScale: { x: number, y: number };
   defaultAlignment: Alignment;
+  maxScale?: number;
+  minScale?: number;
 }
 
 // This is based on OBS's alignments.
@@ -47,6 +50,8 @@ class SceneItem {
   currentPosition: { x: number, y: number };
   currentSize: { width: number, height: number };
   currentScale: { x: number, y: number };
+  maxScale: number = Infinity;
+  minScale: number = -Infinity;
 
   constructor(props: SceneItemProps) {
     Object.assign(this, props)
@@ -66,7 +71,8 @@ class SceneItem {
     this.defaultScale = state.defaultScale
     this.alignment = state.alignment
     this.defaultAlignment = state.defaultAlignment
-    console.log(this.toJSON())
+    this.maxScale = state.maxScale ?? Infinity
+    this.minScale = state.minScale ?? -Infinity
   }
 
   // Destructive action that returns the list of commands
@@ -109,9 +115,13 @@ class SceneItem {
   }
 
   scale(scaleX: number, scaleY?: number): void {
+    scaleY = scaleY ?? scaleX
+    scaleX = clamp(scaleX, this.minScale, this.maxScale)
+    scaleY = clamp(scaleY, this.minScale, this.maxScale)
+
     this.currentScale = {
       x: scaleX,
-      y: scaleY ?? scaleX
+      y: scaleY
     }
 
     this.currentSize = {
@@ -121,8 +131,8 @@ class SceneItem {
   }
 
   adjustSize(magnitude: number): void {
-    const newScale = this.scaleX() * magnitude;
-    console.log('newScale', newScale)
+    let newScale = this.scaleX() * magnitude;
+
     this.scale(newScale)
   }
 

@@ -11,7 +11,10 @@ export default {
           gameSource: "game1",
           moveTransitionFilterName: "transform",
           filters: ["spin", "invert", "delay"],
-          sources: ["spotlight", "dvd"]
+          sources: ["spotlight", "dvd"],
+          minScale: 0.1,
+          maxScale: 2.0
+
         },
         {
           name: "TransformGame2",

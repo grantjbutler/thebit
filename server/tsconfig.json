@@ -5,7 +5,9 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "../dist/server",
-    "composite": true
+    "composite": true,
+    "moduleResolution": "bundler",
+    "module": "ESNext"
   },
   "include": [
     "src/**/*"

@@ -6,7 +6,6 @@ class Listeners {
   private _listeners: Map<string, any> = new Map();
 
   constructor(configs: ListenerConfig[]) {
-    console.log('Listener Configs', configs)
     this._configs = configs;
   }
 
@@ -25,12 +24,10 @@ class Listeners {
       if (cfg.listener == "socketio") {
         const listener = new SocketIOListener(cfg);
         listener.parseRules(controller);
-        console.log('createdListener', listener)
         this._listeners.set(listener.name, listener);
       } else if (cfg.listener == "ws") {
         const listener = new WSListener(cfg);
         listener.parseRules(controller);
-        console.log('createdListener', listener);
         this._listeners.set(listener.name, listener);
       }
     })

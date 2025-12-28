@@ -1,10 +1,13 @@
 import { Atem } from 'atem-connection';
 import { FlyKeyKeyFrame } from 'atem-connection/dist/enums/index.js';
+import { clamp } from "../utils.js"
 
 class UpstreamKey {
   atem: Atem;
   meIndex: number;
   keyerIndex: number;
+  maxScale: number = Infinity;
+  minScale: number = -Infinity;
 
   constructor(atem: Atem, meIndex: number, keyerIndex: number) {
     this.atem = atem;
@@ -13,6 +16,8 @@ class UpstreamKey {
   }
 
   scale({ scale }: { scale: number }): void {
+    scale = clamp(scale, this.minScale, this.maxScale)
+
     this._scaleTo({ x: scale * 1000, y: scale * 1000 });
   }
 
@@ -23,6 +28,14 @@ class UpstreamKey {
     let targetSize = existingSize * magnitude;
 
     this._scaleTo({ x: targetSize, y: targetSize });
+  }
+
+  setMaxScale({ maxScale }: { maxScale: number }): void {
+    this.maxScale = +maxScale;
+  }
+
+  setMinScale({ minScale }: { minScale: number }): void {
+    this.minScale = +minScale;
   }
 
   reset(): void {
@@ -61,6 +74,8 @@ class UpstreamKey {
       { action: "reset", props: {} },
       { action: "shrink", props: { magnitude: "number" } },
       { action: "animationDuration", props: { duration: "number" } },
+      { action: "setMinScale", props: { minScale: "number" } },
+      { action: "setMaxScale", props: { maxScale: "number" } },
     ]
   }
 

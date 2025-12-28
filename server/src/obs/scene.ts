@@ -171,6 +171,14 @@ class Scene {
     this.transition();
   }
 
+  setMaxScale({ maxScale }: { maxScale: number }): void {
+    this.sceneItem.maxScale = +maxScale
+  }
+
+  setMinScale({ minScale }: { minScale: number }): void {
+    this.sceneItem.minScale = +minScale
+  }
+
   getActions(): Action[] {
     return [
       { action: "scale", props: { scale: "number" } },
@@ -192,7 +200,9 @@ class Scene {
       { action: "grow", options: { magnitude: [0.25, 0.5, 0.75] } },
       { action: "rotate", props: { angle: "number" } },
       { action: "rotate", options: { angle: [30, 45, 90, 180] } },
-      { action: "rotate", options: { angle: [-30, -45, -90, -180] } }
+      { action: "rotate", options: { angle: [-30, -45, -90, -180] } },
+      { action: "setMinScale", props: { minScale: "number" } },
+      { action: "setMaxScale", props: { maxScale: "number" } },
     ]
   }
 }

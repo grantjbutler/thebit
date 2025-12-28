@@ -119,7 +119,6 @@ export default class ObsController extends Controller {
 
         for (const oSceneItem of oSceneItems) {
           if (oSceneItem.sourceName == cScene.gameSource) {
-
             const transform = oSceneItem.sceneItemTransform
             scene.setSceneItem(new SceneItem({
               name: oSceneItem.sourceName,
@@ -130,7 +129,9 @@ export default class ObsController extends Controller {
               defaultScale: { x: transform.scaleX, y: transform.scaleY },
               defaultSize: { width: transform.width, height: transform.height },
               defaultAlignment: transform.alignment,
-              rotation: transform.rotation
+              rotation: transform.rotation,
+              maxScale: cScene.maxScale,
+              minScale: cScene.minScale
             }));
           } else if (cScene.sources.includes(oSceneItem.sourceName)) {
             scene.addSource({
@@ -152,7 +153,6 @@ export default class ObsController extends Controller {
             })
           }
         }
-        console.debug('scene', scene);
       }
 
       this.loadState();
