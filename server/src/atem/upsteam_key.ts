@@ -25,7 +25,7 @@ class UpstreamKey {
     let existingSize = this.atem.state?.video.mixEffects[this.meIndex]?.upstreamKeyers[this.keyerIndex]?.dveSettings?.sizeX;
     if (!existingSize) return;
 
-    let targetSize = existingSize * (1 - (+magnitude));
+    let targetSize = clamp(existingSize * (1 - (+magnitude)), this.minScale * 1000, this.maxScale * 1000);
 
     this._scaleTo({ x: targetSize, y: targetSize });
   }
@@ -34,7 +34,7 @@ class UpstreamKey {
     let existingSize = this.atem.state?.video.mixEffects[this.meIndex]?.upstreamKeyers[this.keyerIndex]?.dveSettings?.sizeX;
     if (!existingSize) return;
 
-    let targetSize = existingSize * (1 + (+magnitude));
+    let targetSize = clamp(existingSize * (1 + (+magnitude)), this.minScale * 1000, this.maxScale * 1000);
 
     this._scaleTo({ x: targetSize, y: targetSize });
   }
